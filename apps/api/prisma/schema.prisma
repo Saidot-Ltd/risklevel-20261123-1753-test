@@ -1,0 +1,63 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+}
+
+model Organization {
+    id      Int             @id @default(autoincrement())
+    name    String
+    users   User[]
+    systems AiSystem[]
+}
+
+model User {
+    id             Int          @id @default(autoincrement())
+    email          String       @unique
+    displayName    String
+    organizationId Int
+    organization   Organization @relation(fields: [organizationId], references: [id])
+
+    ownedSystems  AiSystem[]
+    notifications Notification[]
+}
+
+model AiSystem {
+    id             Int          @id @default(autoincrement())
+    name           String
+    riskLevel      String
+    organizationId Int
+    ownerId        Int
+    deletedAt      DateTime?
+    version        Int          @default(1)
+
+    organization  Organization   @relation(fields: [organizationId], references: [id])
+    owner         User        @relation(fields: [ownerId], references: [id])
+    notifications Notification[]
+}
+
+model AuditLog {
+    id             Int      @id @default(autoincrement())
+    entityType     String
+    entityId       Int
+    organizationId Int
+    actorId        Int
+    actorEmail     String
+    before         String
+    after          String
+    createdAt      DateTime @default(now())
+}
+
+model Notification {
+    id          Int      @id @default(autoincrement())
+    systemId    Int
+    recipientId Int
+    message     String
+    createdAt   DateTime @default(now())
+
+    system    AiSystem @relation(fields: [systemId], references: [id])
+    recipient User      @relation(fields: [recipientId], references: [id])
+}

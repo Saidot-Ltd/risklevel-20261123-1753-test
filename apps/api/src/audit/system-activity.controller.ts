@@ -1,0 +1,21 @@
+import { Controller, Get, Param } from '@nestjs/common';
+import { ZodValidationPipe } from 'nestjs-zod';
+import { SessionContext } from '../context/session-context.service';
+import { SystemActivity } from './audit-log.graphql.types';
+import { SystemIdSchema } from './system-activity.schemas';
+import { SystemActivityService } from './system-activity.service';
+
+@Controller('systems')
+export class SystemActivityController {
+    constructor(
+        private readonly systemActivityService: SystemActivityService,
+        private readonly sessionContext: SessionContext,
+    ) {}
+
+    @Get(':systemId/activity')
+    async systemActivity(
+        @Param('systemId', new ZodValidationPipe(SystemIdSchema)) systemId: number,
+    ): Promise<SystemActivity> {
+        return this.systemActivityService.getSystemActivity(systemId, this.sessionContext.organizationId);
+    }
+}
